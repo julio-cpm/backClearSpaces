@@ -35,11 +35,11 @@ public class Tarefa {
     }
 
     @Lob
-    @Column(name = "foto_antes", columnDefinition = "LONGBLOB")
+    @Column(name = "foto_antes", columnDefinition = "BYTEA")
     private byte[] foto_antes;
 
     @Lob
-    @Column(name = "foto_depois", columnDefinition = "LONGBLOB")
+    @Column(name = "foto_depois", columnDefinition = "BYTEA")
     private byte[] foto_depois;
 
     protected Tarefa() {}
