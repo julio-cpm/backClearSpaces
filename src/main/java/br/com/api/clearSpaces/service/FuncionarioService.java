@@ -3,6 +3,7 @@ package br.com.api.clearSpaces.service;
 import br.com.api.clearSpaces.dto.*;
 import br.com.api.clearSpaces.entity.*;
 import br.com.api.clearSpaces.repository.FuncionarioRepository;
+import br.com.api.clearSpaces.repository.OcorrenciaRepository;
 import br.com.api.clearSpaces.repository.PeriodoRepository;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
@@ -18,10 +19,14 @@ public class FuncionarioService {
 
     private final FuncionarioRepository funcionarioRepository;
     private final PeriodoRepository periodoRepository;
+    private final OcorrenciaRepository ocorrenciaRepository;
 
-    public FuncionarioService(FuncionarioRepository funcionarioRepository, PeriodoRepository periodoRepository) {
+    public FuncionarioService(FuncionarioRepository funcionarioRepository,
+                               PeriodoRepository periodoRepository,
+                               OcorrenciaRepository ocorrenciaRepository) {
         this.funcionarioRepository = funcionarioRepository;
         this.periodoRepository = periodoRepository;
+        this.ocorrenciaRepository = ocorrenciaRepository;
     }
 
     @Transactional
@@ -57,6 +62,11 @@ public class FuncionarioService {
 
     @Transactional
     public void deletar(Long id){
+        // 1. Remove as referências do funcionário nas ocorrências antes de deletar
+        ocorrenciaRepository.desvincularRemetente(id);
+        ocorrenciaRepository.desvincularEncarregado(id);
+
+        // 2. Apaga o funcionário
         funcionarioRepository.deleteById(id);
     }
 
