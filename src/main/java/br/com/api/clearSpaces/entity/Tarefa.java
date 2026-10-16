@@ -34,10 +34,12 @@ public class Tarefa {
         intensiva, manutencao, moderada
     }
 
-    @Column(name = "foto_antes", columnDefinition = "BYTEA")
+    @Lob
+    @Column(name = "foto_antes", columnDefinition = "LONGBLOB")
     private byte[] foto_antes;
 
-    @Column(name = "foto_depois", columnDefinition = "BYTEA")
+    @Lob
+    @Column(name = "foto_depois", columnDefinition = "LONGBLOB")
     private byte[] foto_depois;
 
     protected Tarefa() {}
