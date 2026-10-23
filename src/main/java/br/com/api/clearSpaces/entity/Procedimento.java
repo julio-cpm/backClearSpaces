@@ -1,4 +1,4 @@
-package com.clearspaces.model;
+package br.com.api.clearSpaces.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
