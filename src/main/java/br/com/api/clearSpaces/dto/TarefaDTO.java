@@ -3,6 +3,8 @@ package br.com.api.clearSpaces.dto;
 import br.com.api.clearSpaces.entity.Tarefa.TipoLimpezaEnum;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TarefaDTO {
     private String descricao;
@@ -12,8 +14,10 @@ public class TarefaDTO {
     private byte[] foto_antes;
     private byte[] foto_depois;
 
-    public TarefaDTO (){}
+    // 🟢 NOVO CAMPO: Lista para receber os procedimentos do checklist
+    private List<String> procedimentos = new ArrayList<>();
 
+    public TarefaDTO() {}
 
     public TarefaDTO(String descricao, TipoLimpezaEnum tipoLimpeza, Long periodoId, LocalDateTime horarioConclusao) {
         this.descricao = descricao;
@@ -68,5 +72,13 @@ public class TarefaDTO {
 
     public void setFoto_depois(byte[] foto_depois) {
         this.foto_depois = foto_depois;
+    }
+
+    public List<String> getProcedimentos() {
+        return procedimentos;
+    }
+
+    public void setProcedimentos(List<String> procedimentos) {
+        this.procedimentos = procedimentos;
     }
 }
