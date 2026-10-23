@@ -1,14 +1,16 @@
 package br.com.api.clearSpaces.service;
 
+import br.com.api.clearSpaces.dto.ProcedimentoDTO;
 import br.com.api.clearSpaces.dto.TarefaDTO;
 import br.com.api.clearSpaces.entity.Periodo;
+import br.com.api.clearSpaces.entity.Procedimento;
 import br.com.api.clearSpaces.entity.Tarefa;
 import br.com.api.clearSpaces.repository.PeriodoRepository;
 import br.com.api.clearSpaces.repository.TarefaRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,28 +31,65 @@ public class TarefaService {
 
         Tarefa novaTarefa = new Tarefa(dto.getDescricao(), dto.getTipoLimpeza(), periodo, dto.getHorarioConclusao());
 
-        this.tarefaRepository.save(novaTarefa);
-        return novaTarefa;
+        if (dto.getProcedimentos() != null) {
+            for (ProcedimentoDTO procDTO : dto.getProcedimentos()) {
+                Procedimento proc = new Procedimento(procDTO.getDescricao(), novaTarefa);
+                proc.setConcluido(procDTO.isConcluido());
+                novaTarefa.adicionarProcedimento(proc);
+            }
+        }
+
+        return tarefaRepository.save(novaTarefa);
     }
 
     @Transactional
     public Tarefa salvarFotoAntes(Long id, TarefaDTO dto) {
         Tarefa tarefaEncontrada = tarefaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
+        
         tarefaEncontrada.setFoto_antes(dto.getFoto_antes());
-
-        this.tarefaRepository.save(tarefaEncontrada);
-        return tarefaEncontrada;
+        return tarefaRepository.save(tarefaEncontrada);
     }
 
     @Transactional
     public Tarefa salvarFotoDepois(Long id, TarefaDTO dto) {
         Tarefa tarefaEncontrada = tarefaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrado com o ID: " + dto.getPeriodoId()));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
+        
         tarefaEncontrada.setFoto_depois(dto.getFoto_depois());
+        return tarefaRepository.save(tarefaEncontrada);
+    }
 
-        this.tarefaRepository.save(tarefaEncontrada);
-        return tarefaEncontrada;
+    /**
+     * Atualiza os status dos procedimentos recebidos e tenta finalizar a tarefa.
+     */
+    @Transactional
+    public Tarefa concluirTarefa(Long id, TarefaDTO dto) {
+        Tarefa tarefa = tarefaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
+
+        // Atualiza a foto do 'depois' se enviada
+        if (dto.getFoto_depois() != null) {
+            tarefa.setFoto_depois(dto.getFoto_depois());
+        }
+
+        // Atualiza o estado dos procedimentos enviados pelo frontend (checkboxes marcados)
+        if (dto.getProcedimentos() != null && !dto.getProcedimentos().isEmpty()) {
+            for (ProcedimentoDTO procDTO : dto.getProcedimentos()) {
+                tarefa.getProcedimentos().stream()
+                        .filter(p -> p.getId().equals(procDTO.getId()))
+                        .findFirst()
+                        .ifPresent(p -> p.setConcluido(procDTO.isConcluido()));
+            }
+        }
+
+        // Valida se todos os procedimentos foram concluídos
+        if (!tarefa.todosProcedimentosConcluidos()) {
+            throw new IllegalStateException("Não é possível concluir a tarefa: existem procedimentos pendentes.");
+        }
+
+        tarefa.setHorarioConclusao(LocalDateTime.now());
+        return tarefaRepository.save(tarefa);
     }
 
     public List<Tarefa> listarTodas() {
@@ -74,7 +113,7 @@ public class TarefaService {
     }
 
     @Transactional
-    public void deletar(Long id){
+    public void deletar(Long id) {
         tarefaRepository.deleteById(id);
     }
 }
