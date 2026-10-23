@@ -21,7 +21,7 @@ public class TarefaService {
     private PeriodoRepository periodoRepository;
 
     @Transactional
-    public Tarefa criarTarefa(TarefaDTO dto) {
+    public Tarefa salvar(TarefaDTO dto) {
         Tarefa tarefa = new Tarefa();
         tarefa.setDescricao(dto.getDescricao());
         tarefa.setTipoLimpeza(dto.getTipoLimpeza());
@@ -42,8 +42,12 @@ public class TarefaService {
         return tarefaRepository.save(tarefa);
     }
 
+    public Tarefa criarTarefa(TarefaDTO dto) {
+        return salvar(dto);
+    }
+
     @Transactional
-    public Tarefa atualizarTarefa(Long id, TarefaDTO dto) {
+    public Tarefa atualizar(Long id, TarefaDTO dto) {
         Tarefa tarefa = tarefaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + id));
 
@@ -65,6 +69,37 @@ public class TarefaService {
         }
 
         return tarefaRepository.save(tarefa);
+    }
+
+    public Tarefa atualizarTarefa(Long id, TarefaDTO dto) {
+        return atualizar(id, dto);
+    }
+
+    @Transactional
+    public Tarefa salvarFotoAntes(Long id, TarefaDTO dto) {
+        Tarefa tarefa = tarefaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + id));
+        
+        String foto = dto.getFotoAntes() != null ? dto.getFotoAntes() : dto.getFoto_antes();
+        tarefa.setFotoAntes(foto);
+        
+        return tarefaRepository.save(tarefa);
+    }
+
+    @Transactional
+    public Tarefa salvarFotoDepois(Long id, TarefaDTO dto) {
+        Tarefa tarefa = tarefaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + id));
+
+        String foto = dto.getFotoDepois() != null ? dto.getFotoDepois() : dto.getFoto_depois();
+        tarefa.setFotoDepois(foto);
+
+        return tarefaRepository.save(tarefa);
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        tarefaRepository.deleteById(id);
     }
 
     public List<Tarefa> listarTodas() {
