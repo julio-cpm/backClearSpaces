@@ -42,7 +42,6 @@ public class Tarefa {
     @Column(name = "foto_depois", columnDefinition = "LONGBLOB")
     private byte[] foto_depois;
 
-    // 🟢 NOVO CAMPO: Mapeamento para os procedimentos do checklist
     @ElementCollection
     @CollectionTable(name = "tarefa_procedimentos", joinColumns = @JoinColumn(name = "tarefa_id"))
     @Column(name = "procedimento")
