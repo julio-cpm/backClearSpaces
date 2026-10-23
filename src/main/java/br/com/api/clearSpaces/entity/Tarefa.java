@@ -42,6 +42,12 @@ public class Tarefa {
     @Column(name = "foto_depois", columnDefinition = "LONGBLOB")
     private byte[] foto_depois;
 
+    // 🟢 NOVO CAMPO: Mapeamento para os procedimentos do checklist
+    @ElementCollection
+    @CollectionTable(name = "tarefa_procedimentos", joinColumns = @JoinColumn(name = "tarefa_id"))
+    @Column(name = "procedimento")
+    private List<String> procedimentos = new ArrayList<>();
+
     protected Tarefa() {}
 
     public Tarefa(String descricao, TipoLimpezaEnum tipoLimpeza, Periodo periodo, LocalDateTime horarioConclusao) {
@@ -113,5 +119,13 @@ public class Tarefa {
 
     public void setFoto_depois(byte[] foto_depois) {
         this.foto_depois = foto_depois;
+    }
+
+    public List<String> getProcedimentos() {
+        return procedimentos;
+    }
+
+    public void setProcedimentos(List<String> procedimentos) {
+        this.procedimentos = procedimentos;
     }
 }
