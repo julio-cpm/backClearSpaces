@@ -64,7 +64,6 @@ public class Tarefa {
     public String getFotoDepois() { return fotoDepois; }
     public void setFotoDepois(String fotoDepois) { this.fotoDepois = fotoDepois; }
 
-    // Compatibilidade com BackupFotosTarefaService (snake_case)
     public String getFoto_antes() { return fotoAntes; }
     public void setFoto_antes(String foto_antes) { this.fotoAntes = foto_antes; }
 
