@@ -21,7 +21,11 @@ public class Tarefa {
     private Periodo periodo;
 
     private String horarioConclusao;
+
+    @Column(name = "foto_antes", columnDefinition = "LONGBLOB")
     private String fotoAntes;
+
+    @Column(name = "foto_depois", columnDefinition = "LONGBLOB")
     private String fotoDepois;
 
     @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -59,6 +63,13 @@ public class Tarefa {
 
     public String getFotoDepois() { return fotoDepois; }
     public void setFotoDepois(String fotoDepois) { this.fotoDepois = fotoDepois; }
+
+    // Compatibilidade com BackupFotosTarefaService (snake_case)
+    public String getFoto_antes() { return fotoAntes; }
+    public void setFoto_antes(String foto_antes) { this.fotoAntes = foto_antes; }
+
+    public String getFoto_depois() { return fotoDepois; }
+    public void setFoto_depois(String foto_depois) { this.fotoDepois = foto_depois; }
 
     public List<Procedimento> getProcedimentos() { return procedimentos; }
     public void setProcedimentos(List<Procedimento> procedimentos) { this.procedimentos = procedimentos; }
