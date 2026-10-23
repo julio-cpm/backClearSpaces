@@ -3,6 +3,7 @@ package br.com.api.clearSpaces.controller;
 import br.com.api.clearSpaces.dto.TarefaDTO;
 import br.com.api.clearSpaces.entity.Tarefa;
 import br.com.api.clearSpaces.service.TarefaService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,6 +42,16 @@ public class TarefaController {
     @PutMapping("/{id}/ft_depois")
     public Tarefa adicionarFotoDepois(@PathVariable Long id, @RequestBody TarefaDTO dto) {
         return tarefaService.salvarFotoDepois(id, dto);
+    }
+
+    @PutMapping("/{id}/concluir")
+    public ResponseEntity<?> concluirTarefa(@PathVariable Long id, @RequestBody TarefaDTO dto) {
+        try {
+            Tarefa tarefaConcluida = tarefaService.concluirTarefa(id, dto);
+            return ResponseEntity.ok(tarefaConcluida);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
