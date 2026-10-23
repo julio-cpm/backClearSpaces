@@ -1,84 +1,50 @@
-package br.com.api.clearSpaces.dto;
+package com.clearspaces.dto;
 
-import br.com.api.clearSpaces.entity.Tarefa.TipoLimpezaEnum;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TarefaDTO {
     private String descricao;
-    private TipoLimpezaEnum tipoLimpeza;
+    private String tipoLimpeza;
     private Long periodoId;
-    private LocalDateTime horarioConclusao;
-    private byte[] foto_antes;
-    private byte[] foto_depois;
-
-    // 🟢 NOVO CAMPO: Lista para receber os procedimentos do checklist
-    private List<String> procedimentos = new ArrayList<>();
-
-    public TarefaDTO() {}
-
-    public TarefaDTO(String descricao, TipoLimpezaEnum tipoLimpeza, Long periodoId, LocalDateTime horarioConclusao) {
-        this.descricao = descricao;
-        this.tipoLimpeza = tipoLimpeza;
-        this.periodoId = periodoId;
-        this.horarioConclusao = horarioConclusao;
-    }
+    private String horarioConclusao;
+    private List<String> procedimentos;
 
     public String getDescricao() {
-        return descricao;
+        return descricao; 
     }
-
     public void setDescricao(String descricao) {
-        this.descricao = descricao;
+        this.descricao = descricao; 
     }
 
-    public TipoLimpezaEnum getTipoLimpeza() {
-        return tipoLimpeza;
+    public String getTipoLimpeza() {
+        return tipoLimpeza; 
     }
-
-    public void setTipoLimpeza(TipoLimpezaEnum tipoLimpeza) {
-        this.tipoLimpeza = tipoLimpeza;
+    
+    public void setTipoLimpeza(String tipoLimpeza) {
+        this.tipoLimpeza = tipoLimpeza; 
     }
 
     public Long getPeriodoId() {
-        return periodoId;
+        return periodoId; 
     }
-
+    
     public void setPeriodoId(Long periodoId) {
-        this.periodoId = periodoId;
+        this.periodoId = periodoId; 
     }
 
-    public LocalDateTime getHorarioConclusao() {
-        return horarioConclusao;
+    public String getHorarioConclusao() {
+        return horarioConclusao; 
     }
-
-    public void setHorarioConclusao(LocalDateTime horarioConclusao) {
-        this.horarioConclusao = horarioConclusao;
-    }
-
-    public byte[] getFoto_antes() {
-        return foto_antes;
-    }
-
-    public void setFoto_antes(byte[] foto_antes) {
-        this.foto_antes = foto_antes;
-    }
-
-    public byte[] getFoto_depois() {
-        return foto_depois;
-    }
-
-    public void setFoto_depois(byte[] foto_depois) {
-        this.foto_depois = foto_depois;
+    
+    public void setHorarioConclusao(String horarioConclusao) { 
+        this.horarioConclusao = horarioConclusao; 
     }
 
     public List<String> getProcedimentos() {
-        return procedimentos;
+        return procedimentos; 
     }
-
+    
     public void setProcedimentos(List<String> procedimentos) {
-        this.procedimentos = procedimentos;
+        this.procedimentos = procedimentos; 
     }
 }
