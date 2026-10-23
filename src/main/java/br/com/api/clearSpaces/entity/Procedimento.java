@@ -14,6 +14,9 @@ public class Procedimento {
     @Column(nullable = false)
     private String descricao;
 
+    @Column(nullable = false)
+    private boolean concluido = false;
+
     @ManyToOne
     @JoinColumn(name = "tarefa_id")
     @JsonBackReference
@@ -24,6 +27,7 @@ public class Procedimento {
     public Procedimento(String descricao, Tarefa tarefa) {
         this.descricao = descricao;
         this.tarefa = tarefa;
+        this.concluido = false;
     }
 
     public Long getId() { return id; }
@@ -31,6 +35,9 @@ public class Procedimento {
 
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
+
+    public boolean isConcluido() { return concluido; }
+    public void setConcluido(boolean concluido) { this.concluido = concluido; }
 
     public Tarefa getTarefa() { return tarefa; }
     public void setTarefa(Tarefa tarefa) { this.tarefa = tarefa; }
