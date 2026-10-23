@@ -1,10 +1,10 @@
-package com.clearspaces.service;
+package br.com.api.clearSpaces.service;
 
-import com.clearspaces.dto.TarefaDTO;
-import com.clearspaces.model.Periodo;
-import com.clearspaces.model.Tarefa;
-import com.clearspaces.repository.PeriodoRepository;
-import com.clearspaces.repository.TarefaRepository;
+import br.com.api.clearSpaces.dto.TarefaDTO;
+import br.com.api.clearSpaces.entity.Periodo;
+import br.com.api.clearSpaces.entity.Tarefa;
+import br.com.api.clearSpaces.repository.PeriodoRepository;
+import br.com.api.clearSpaces.repository.TarefaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
