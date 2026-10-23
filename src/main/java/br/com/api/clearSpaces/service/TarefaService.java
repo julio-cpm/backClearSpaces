@@ -6,7 +6,6 @@ import br.com.api.clearSpaces.entity.Tarefa;
 import br.com.api.clearSpaces.repository.PeriodoRepository;
 import br.com.api.clearSpaces.repository.TarefaRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +28,17 @@ public class TarefaService {
 
         Tarefa novaTarefa = new Tarefa(dto.getDescricao(), dto.getTipoLimpeza(), periodo, dto.getHorarioConclusao());
 
+        if (dto.getProcedimentos() != null && !dto.getProcedimentos().isEmpty()) {
+            novaTarefa.setProcedimentos(dto.getProcedimentos());
+        } else {
+            novaTarefa.setProcedimentos(List.of(
+                "Lavagem de vasos",
+                "Higienização de pias",
+                "Reposição de papéis",
+                "Recolhimento do lixo"
+            ));
+        }
+
         this.tarefaRepository.save(novaTarefa);
         return novaTarefa;
     }
@@ -36,7 +46,7 @@ public class TarefaService {
     @Transactional
     public Tarefa salvarFotoAntes(Long id, TarefaDTO dto) {
         Tarefa tarefaEncontrada = tarefaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrado com o ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
         tarefaEncontrada.setFoto_antes(dto.getFoto_antes());
 
         this.tarefaRepository.save(tarefaEncontrada);
@@ -46,7 +56,7 @@ public class TarefaService {
     @Transactional
     public Tarefa salvarFotoDepois(Long id, TarefaDTO dto) {
         Tarefa tarefaEncontrada = tarefaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrado com o ID: " + dto.getPeriodoId()));
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
         tarefaEncontrada.setFoto_depois(dto.getFoto_depois());
 
         this.tarefaRepository.save(tarefaEncontrada);
@@ -70,11 +80,15 @@ public class TarefaService {
         tarefaExistente.setPeriodo(novoPeriodo);
         tarefaExistente.setHorarioConclusao(dto.getHorarioConclusao());
 
+        if (dto.getProcedimentos() != null && !dto.getProcedimentos().isEmpty()) {
+            tarefaExistente.setProcedimentos(dto.getProcedimentos());
+        }
+
         return tarefaExistente;
     }
 
     @Transactional
-    public void deletar(Long id){
+    public void deletar(Long id) {
         tarefaRepository.deleteById(id);
     }
 }
