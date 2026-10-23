@@ -1,94 +1,73 @@
-package br.com.api.clearSpaces.service;
+package com.clearspaces.service;
 
-import br.com.api.clearSpaces.dto.TarefaDTO;
-import br.com.api.clearSpaces.entity.Periodo;
-import br.com.api.clearSpaces.entity.Tarefa;
-import br.com.api.clearSpaces.repository.PeriodoRepository;
-import br.com.api.clearSpaces.repository.TarefaRepository;
-import jakarta.transaction.Transactional;
+import com.clearspaces.dto.TarefaDTO;
+import com.clearspaces.model.Periodo;
+import com.clearspaces.model.Tarefa;
+import com.clearspaces.repository.PeriodoRepository;
+import com.clearspaces.repository.TarefaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class TarefaService {
 
-    private final TarefaRepository tarefaRepository;
-    private final PeriodoRepository periodoRepository;
+    @Autowired
+    private TarefaRepository tarefaRepository;
 
-    public TarefaService(TarefaRepository tarefaRepository, PeriodoRepository periodoRepository) {
-        this.tarefaRepository = tarefaRepository;
-        this.periodoRepository = periodoRepository;
-    }
+    @Autowired
+    private PeriodoRepository periodoRepository;
 
     @Transactional
-    public Tarefa salvar(TarefaDTO dto) {
-        Periodo periodo = periodoRepository.findById(dto.getPeriodoId())
-                .orElseThrow(() -> new RuntimeException("Período não encontrado com o ID: " + dto.getPeriodoId()));
+    public Tarefa criarTarefa(TarefaDTO dto) {
+        Tarefa tarefa = new Tarefa();
+        tarefa.setDescricao(dto.getDescricao());
+        tarefa.setTipoLimpeza(dto.getTipoLimpeza());
+        tarefa.setHorarioConclusao(dto.getHorarioConclusao());
 
-        Tarefa novaTarefa = new Tarefa(dto.getDescricao(), dto.getTipoLimpeza(), periodo, dto.getHorarioConclusao());
-
-        if (dto.getProcedimentos() != null && !dto.getProcedimentos().isEmpty()) {
-            novaTarefa.setProcedimentos(dto.getProcedimentos());
-        } else {
-            novaTarefa.setProcedimentos(List.of(
-                "Lavagem de vasos",
-                "Higienização de pias",
-                "Reposição de papéis",
-                "Recolhimento do lixo"
-            ));
+        if (dto.getPeriodoId() != null) {
+            Periodo periodo = periodoRepository.findById(dto.getPeriodoId())
+                    .orElseThrow(() -> new RuntimeException("Período não encontrado: " + dto.getPeriodoId()));
+            tarefa.setPeriodo(periodo);
         }
 
-        this.tarefaRepository.save(novaTarefa);
-        return novaTarefa;
+        if (dto.getProcedimentos() != null) {
+            for (String desc : dto.getProcedimentos()) {
+                tarefa.adicionarProcedimento(desc);
+            }
+        }
+
+        return tarefaRepository.save(tarefa);
     }
 
     @Transactional
-    public Tarefa salvarFotoAntes(Long id, TarefaDTO dto) {
-        Tarefa tarefaEncontrada = tarefaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
-        tarefaEncontrada.setFoto_antes(dto.getFoto_antes());
+    public Tarefa atualizarTarefa(Long id, TarefaDTO dto) {
+        Tarefa tarefa = tarefaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + id));
 
-        this.tarefaRepository.save(tarefaEncontrada);
-        return tarefaEncontrada;
-    }
+        tarefa.setDescricao(dto.getDescricao());
+        tarefa.setTipoLimpeza(dto.getTipoLimpeza());
+        tarefa.setHorarioConclusao(dto.getHorarioConclusao());
 
-    @Transactional
-    public Tarefa salvarFotoDepois(Long id, TarefaDTO dto) {
-        Tarefa tarefaEncontrada = tarefaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
-        tarefaEncontrada.setFoto_depois(dto.getFoto_depois());
+        if (dto.getPeriodoId() != null) {
+            Periodo periodo = periodoRepository.findById(dto.getPeriodoId())
+                    .orElseThrow(() -> new RuntimeException("Período não encontrado: " + dto.getPeriodoId()));
+            tarefa.setPeriodo(periodo);
+        }
 
-        this.tarefaRepository.save(tarefaEncontrada);
-        return tarefaEncontrada;
+        if (dto.getProcedimentos() != null) {
+            tarefa.limparProcedimentos();
+            for (String desc : dto.getProcedimentos()) {
+                tarefa.adicionarProcedimento(desc);
+            }
+        }
+
+        return tarefaRepository.save(tarefa);
     }
 
     public List<Tarefa> listarTodas() {
         return tarefaRepository.findAll();
-    }
-
-    @Transactional
-    public Tarefa atualizar(Long id, TarefaDTO dto) {
-        Tarefa tarefaExistente = tarefaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com o ID: " + id));
-
-        Periodo novoPeriodo = periodoRepository.findById(dto.getPeriodoId())
-                .orElseThrow(() -> new RuntimeException("Período não encontrado com o ID: " + dto.getPeriodoId()));
-
-        tarefaExistente.setDescricao(dto.getDescricao());
-        tarefaExistente.setTipoLimpezaEnum(dto.getTipoLimpeza());
-        tarefaExistente.setPeriodo(novoPeriodo);
-        tarefaExistente.setHorarioConclusao(dto.getHorarioConclusao());
-
-        if (dto.getProcedimentos() != null && !dto.getProcedimentos().isEmpty()) {
-            tarefaExistente.setProcedimentos(dto.getProcedimentos());
-        }
-
-        return tarefaExistente;
-    }
-
-    @Transactional
-    public void deletar(Long id) {
-        tarefaRepository.deleteById(id);
     }
 }
