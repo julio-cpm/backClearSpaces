@@ -2,12 +2,6 @@ package br.com.api.clearSpaces.service;
 
 import br.com.api.clearSpaces.entity.Tarefa;
 import br.com.api.clearSpaces.repository.TarefaRepository;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.FileContent;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.drive.Drive;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.UserCredentials;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,8 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -27,17 +27,11 @@ public class BackupFotosTarefaService {
 
     private final TarefaRepository tarefaRepository;
 
-    @Value("${GOOGLE_CLIENT_ID}")
-    private String clientId;
+    @Value("${DRIVE_SCRIPT_URL}")
+    private String scriptUrl;
 
-    @Value("${GOOGLE_CLIENT_SECRET}")
-    private String clientSecret;
-
-    @Value("${GOOGLE_REFRESH_TOKEN}")
-    private String refreshToken;
-
-    @Value("${GOOGLE_DRIVE_FOLDER_ID}")
-    private String folderId;
+    @Value("${DRIVE_SCRIPT_SENHA}")
+    private String scriptSenha;
 
     public BackupFotosTarefaService(TarefaRepository tarefaRepository) {
         this.tarefaRepository = tarefaRepository;
@@ -83,8 +77,8 @@ public class BackupFotosTarefaService {
 
         // 2) Envia para o Google Drive
         try {
-            String idDrive = enviarParaDrive(arquivoZip);
-            System.out.println("Backup enviado ao Drive. ID: " + idDrive);
+            String resposta = enviarParaDrive(arquivoZip);
+            System.out.println("Backup enviado ao Drive. " + resposta);
         } catch (Exception e) {
             System.err.println("Falha ao enviar para o Drive: " + e.getMessage());
             return; // não apaga nada do banco
@@ -101,28 +95,25 @@ public class BackupFotosTarefaService {
     }
 
     private String enviarParaDrive(File arquivo) throws Exception {
-        UserCredentials credentials = UserCredentials.newBuilder()
-                .setClientId(clientId)
-                .setClientSecret(clientSecret)
-                .setRefreshToken(refreshToken)
+        String base64 = Base64.getEncoder().encodeToString(Files.readAllBytes(arquivo.toPath()));
+        String json = "{\"senha\":\"" + scriptSenha + "\",\"nome\":\"" + arquivo.getName()
+                + "\",\"conteudo\":\"" + base64 + "\"}";
+
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
 
-        Drive drive = new Drive.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                GsonFactory.getDefaultInstance(),
-                new HttpCredentialsAdapter(credentials))
-                .setApplicationName("ClearSpaces")
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(scriptUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
-        com.google.api.services.drive.model.File metadata =
-                new com.google.api.services.drive.model.File();
-        metadata.setName(arquivo.getName());
-        metadata.setParents(List.of(folderId));
+        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        return drive.files()
-                .create(metadata, new FileContent("application/zip", arquivo))
-                .setFields("id")
-                .execute()
-                .getId();
+        if (resp.statusCode() != 200 || !resp.body().startsWith("ok:")) {
+            throw new IOException("Resposta inesperada: " + resp.statusCode() + " " + resp.body());
+        }
+        return resp.body();
     }
 }
