@@ -37,7 +37,7 @@ public class BackupFotosTarefaService {
         this.tarefaRepository = tarefaRepository;
     }
 
-    @Scheduled(cron = "0 5 10 * * *", zone = "America/Sao_Paulo")
+    @Scheduled(cron = "0 10 10 * * *", zone = "America/Sao_Paulo")
     @Transactional
     public void realizarBackupELimpezaFotos() {
         List<Tarefa> tarefasComFoto = tarefaRepository.buscarTarefasComFotos();
