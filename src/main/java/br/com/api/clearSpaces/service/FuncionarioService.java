@@ -54,7 +54,9 @@ public class FuncionarioService {
         if (passwordEncoder.matches(dto.getSenhaAntiga(), funcionarioExistente.getSenha())) {
             funcionarioExistente.setNome(dto.getNome());
             funcionarioExistente.setCpf(dto.getCpf());
-            funcionarioExistente.setSenha(passwordEncoder.encode(dto.getSenha()));
+            if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
+                funcionarioExistente.setSenha(passwordEncoder.encode(dto.getSenha()));
+            }
             funcionarioExistente.setFuncao(dto.getFuncao());
             funcionarioExistente.setPeriodo(novoPeriodo);
         } else {
@@ -80,7 +82,9 @@ public class FuncionarioService {
 
         if (dto.getCpf() != null && !dto.getCpf().isBlank()) {
             funcionarioOpt = acharPorCpf(dto.getCpf());
-        } else if (dto.getMatricula() != null && !dto.getMatricula().isBlank()) {
+        }
+
+        if (funcionarioOpt.isEmpty() && dto.getMatricula() != null && !dto.getMatricula().isBlank()) {
             funcionarioOpt = acharPorMatricula(dto.getMatricula());
         }
 
@@ -118,7 +122,9 @@ public class FuncionarioService {
 
         if (dto.getCpf() != null && !dto.getCpf().isBlank()) {
             funcionarioOpt = funcionarioRepository.findByCpf(dto.getCpf());
-        } else if (dto.getMatricula() != null && !dto.getMatricula().isBlank()) {
+        }
+
+        if (funcionarioOpt.isEmpty() && dto.getMatricula() != null && !dto.getMatricula().isBlank()) {
             funcionarioOpt = funcionarioRepository.findByMatricula(dto.getMatricula());
         }
 
