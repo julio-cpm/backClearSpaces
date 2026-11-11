@@ -54,8 +54,7 @@ public class BackupFotosTarefaService {
 
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         File arquivoZip = new File(pastaBackup, "fotos_tarefas_" + timestamp + ".zip");
-
-        // 1) Gera o ZIP
+        
         try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(arquivoZip))) {
             for (Tarefa tarefa : tarefasComFoto) {
                 if (tarefa.getFoto_antes() != null && tarefa.getFoto_antes().length > 0) {
@@ -72,21 +71,20 @@ public class BackupFotosTarefaService {
         } catch (IOException e) {
             System.err.println("Falha ao compactar fotos: " + e.getMessage());
             arquivoZip.delete();
-            return; // não apaga nada do banco
+            return;
         }
 
-        // 2) Envia para o Google Drive
         try {
             String resposta = enviarParaDrive(arquivoZip);
             System.out.println("Backup enviado ao Drive. " + resposta);
         } catch (Exception e) {
             System.err.println("Falha ao enviar para o Drive: " + e.getMessage());
-            return; // não apaga nada do banco
+            return;
+            
         } finally {
             arquivoZip.delete();
         }
 
-        // 3) Só limpa o banco depois do upload dar certo
         for (Tarefa tarefa : tarefasComFoto) {
             tarefa.setFoto_antes(null);
             tarefa.setFoto_depois(null);
