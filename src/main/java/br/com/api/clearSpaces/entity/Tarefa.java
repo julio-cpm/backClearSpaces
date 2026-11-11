@@ -57,11 +57,6 @@ public class Tarefa {
         this.horarioConclusao = horarioConclusao;
     }
 
-    // --- Métodos de Regra de Negócio ---
-
-    /**
-     * Verifica se todos os procedimentos vinculados foram marcados como concluídos.
-     */
     public boolean todosProcedimentosConcluidos() {
         if (procedimentos.isEmpty()) {
             return true; // Se não houver procedimentos cadastrados, considera liberado
@@ -69,9 +64,6 @@ public class Tarefa {
         return procedimentos.stream().allMatch(Procedimento::isConcluido);
     }
 
-    /**
-     * Tenta finalizar a tarefa registrando o horário atual apenas se todos os procedimentos estiverem concluídos.
-     */
     public boolean concluirTarefa() {
         if (todosProcedimentosConcluidos()) {
             this.horarioConclusao = LocalDateTime.now();
@@ -84,8 +76,6 @@ public class Tarefa {
         procedimentos.add(procedimento);
         procedimento.setTarefa(this);
     }
-
-    // --- Getters e Setters ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
