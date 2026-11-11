@@ -29,13 +29,22 @@ public class FuncionarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    private String limparCpf(String cpf) {
+        return cpf == null ? null : cpf.replaceAll("\\D", "");
+    }
+
     @Transactional
     public void criar(FuncionarioDTO dto) {
         Periodo periodoEncontrado = periodoRepository.findById(dto.getPeriodoId())
                 .orElseThrow(() -> new RuntimeException("Período não encontrado com o ID: " + dto.getPeriodoId()));
 
         String senhaCriptografada = passwordEncoder.encode(dto.getSenha());
-        Funcionario novoFuncionario = new Funcionario(dto.getNome(), dto.getCpf(), senhaCriptografada, dto.getFuncao(), periodoEncontrado);
+        Funcionario novoFuncionario = new Funcionario(
+                dto.getNome(),
+                limparCpf(dto.getCpf()),
+                senhaCriptografada,
+                dto.getFuncao(),
+                periodoEncontrado);
         funcionarioRepository.save(novoFuncionario);
     }
 
@@ -53,7 +62,7 @@ public class FuncionarioService {
 
         if (passwordEncoder.matches(dto.getSenhaAntiga(), funcionarioExistente.getSenha())) {
             funcionarioExistente.setNome(dto.getNome());
-            funcionarioExistente.setCpf(dto.getCpf());
+            funcionarioExistente.setCpf(limparCpf(dto.getCpf()));
             if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
                 funcionarioExistente.setSenha(passwordEncoder.encode(dto.getSenha()));
             }
@@ -70,7 +79,7 @@ public class FuncionarioService {
     }
 
     public Optional<Funcionario> acharPorCpf(String cpf) {
-        return funcionarioRepository.findByCpf(cpf);
+        return funcionarioRepository.findByCpf(limparCpf(cpf));
     }
 
     public Optional<Funcionario> acharPorMatricula(String matricula) {
@@ -121,7 +130,7 @@ public class FuncionarioService {
         Optional<Funcionario> funcionarioOpt = Optional.empty();
 
         if (dto.getCpf() != null && !dto.getCpf().isBlank()) {
-            funcionarioOpt = funcionarioRepository.findByCpf(dto.getCpf());
+            funcionarioOpt = funcionarioRepository.findByCpf(limparCpf(dto.getCpf()));
         }
 
         if (funcionarioOpt.isEmpty() && dto.getMatricula() != null && !dto.getMatricula().isBlank()) {
