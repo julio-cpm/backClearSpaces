@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,21 +19,27 @@ public class FuncionarioService {
 
     private final FuncionarioRepository funcionarioRepository;
     private final PeriodoRepository periodoRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public FuncionarioService(FuncionarioRepository funcionarioRepository, PeriodoRepository periodoRepository) {
+    public FuncionarioService(FuncionarioRepository funcionarioRepository,
+                              PeriodoRepository periodoRepository,
+                              PasswordEncoder passwordEncoder) {
         this.funcionarioRepository = funcionarioRepository;
         this.periodoRepository = periodoRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
-    public void criar(FuncionarioDTO dto){
+    public void criar(FuncionarioDTO dto) {
         Periodo periodoEncontrado = periodoRepository.findById(dto.getPeriodoId())
-                .orElseThrow(() -> new RuntimeException("Periodo não encontrado com o ID: " + dto.getPeriodoId()));
-        Funcionario novoFuncionario = new Funcionario(dto.getNome(), dto.getCpf(), dto.getSenha(), dto.getFuncao(),periodoEncontrado);
+                .orElseThrow(() -> new RuntimeException("Período não encontrado com o ID: " + dto.getPeriodoId()));
+
+        String senhaCriptografada = passwordEncoder.encode(dto.getSenha());
+        Funcionario novoFuncionario = new Funcionario(dto.getNome(), dto.getCpf(), senhaCriptografada, dto.getFuncao(), periodoEncontrado);
         funcionarioRepository.save(novoFuncionario);
     }
 
-    public List<Funcionario> ler(){
+    public List<Funcionario> ler() {
         return funcionarioRepository.findAll();
     }
 
@@ -44,54 +51,50 @@ public class FuncionarioService {
         Periodo novoPeriodo = periodoRepository.findById(dto.getPeriodoId())
                 .orElseThrow(() -> new RuntimeException("Período não encontrado com o ID: " + dto.getPeriodoId()));
 
-        if (dto.getSenhaAntiga().equals(funcionarioExistente.getSenha())){
+        if (passwordEncoder.matches(dto.getSenhaAntiga(), funcionarioExistente.getSenha())) {
             funcionarioExistente.setNome(dto.getNome());
             funcionarioExistente.setCpf(dto.getCpf());
-            funcionarioExistente.setSenha(dto.getSenha());
+            funcionarioExistente.setSenha(passwordEncoder.encode(dto.getSenha()));
             funcionarioExistente.setFuncao(dto.getFuncao());
             funcionarioExistente.setPeriodo(novoPeriodo);
-        }else {
+        } else {
             throw new RuntimeException("Senha antiga inválida");
         }
     }
 
     @Transactional
-    public void deletar(Long id){
+    public void deletar(Long id) {
         funcionarioRepository.deleteById(id);
     }
 
-    public Optional<Funcionario> acharPorCpf(String cpf){
+    public Optional<Funcionario> acharPorCpf(String cpf) {
         return funcionarioRepository.findByCpf(cpf);
     }
 
-    public Optional<Funcionario> acharPorMatricula(String matricula){
+    public Optional<Funcionario> acharPorMatricula(String matricula) {
         return funcionarioRepository.findByMatricula(matricula);
     }
 
-    public ResponseEntity<?> login(LoginDTO dto, HttpSession session){
-        Optional<Funcionario> funcionarioCpfTmp = acharPorCpf(dto.getCpf());
-        Optional<Funcionario> funcionarioMatriculaTmp = acharPorMatricula(dto.getMatricula());
+    public ResponseEntity<?> login(LoginDTO dto, HttpSession session) {
+        Optional<Funcionario> funcionarioOpt = Optional.empty();
 
-        if (funcionarioCpfTmp.isPresent()){
-            session.setAttribute("nome", funcionarioCpfTmp.get().getNome());
-            session.setAttribute("funcao", funcionarioCpfTmp.get().getFuncao());
-            if (dto.getSenha().equals(funcionarioCpfTmp.get().getSenha())){
-                Funcionario funcionarioAchado = funcionarioCpfTmp.get();
-                return ResponseEntity.ok(funcionarioAchado);
-            }else{
+        if (dto.getCpf() != null && !dto.getCpf().isBlank()) {
+            funcionarioOpt = acharPorCpf(dto.getCpf());
+        } else if (dto.getMatricula() != null && !dto.getMatricula().isBlank()) {
+            funcionarioOpt = acharPorMatricula(dto.getMatricula());
+        }
+
+        if (funcionarioOpt.isPresent()) {
+            Funcionario funcionario = funcionarioOpt.get();
+            if (passwordEncoder.matches(dto.getSenha(), funcionario.getSenha())) {
+                session.setAttribute("nome", funcionario.getNome());
+                session.setAttribute("funcao", funcionario.getFuncao());
+                return ResponseEntity.ok(funcionario);
+            } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha incorreta");
             }
-        }else if (funcionarioMatriculaTmp.isPresent()){
-            session.setAttribute("nome", funcionarioMatriculaTmp.get().getNome());
-            session.setAttribute("funcao", funcionarioMatriculaTmp.get().getFuncao());
-            if (dto.getSenha().equals(funcionarioMatriculaTmp.get().getSenha())){
-                Funcionario funcionarioAchado = funcionarioMatriculaTmp.get();
-                return ResponseEntity.ok(funcionarioAchado);
-            }else{
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha incorreta");
-            }
-        }else{
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Funcionario inexistente");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Funcionário inexistente");
         }
     }
 
@@ -102,10 +105,10 @@ public class FuncionarioService {
 
     public ResponseEntity<String> funcionarioLogado(HttpSession session) {
         String nome = (String) session.getAttribute("nome");
-        if (nome != null){
+        if (nome != null) {
             return ResponseEntity.ok("Funcionário logado: " + nome);
-        }else{
-            return ResponseEntity.ok("Nenhum usuario logado! ");
+        } else {
+            return ResponseEntity.ok("Nenhum usuário logado!");
         }
     }
 
@@ -124,7 +127,7 @@ public class FuncionarioService {
         }
 
         Funcionario funcionario = funcionarioOpt.get();
-        funcionario.setSenha(dto.getNovaSenha());
+        funcionario.setSenha(passwordEncoder.encode(dto.getNovaSenha()));
         funcionarioRepository.save(funcionario);
 
         return ResponseEntity.ok("Senha atualizada com sucesso!");
