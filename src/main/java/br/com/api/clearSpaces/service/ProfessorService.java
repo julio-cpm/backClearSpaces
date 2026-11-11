@@ -32,13 +32,22 @@ public class ProfessorService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /** Remove pontos, traços e espaços: "123.456.789-00" -> "12345678900". */
+    private String limparCpf(String cpf) {
+        return cpf == null ? null : cpf.replaceAll("\\D", "");
+    }
+
     @Transactional
     public void criar(ProfessorDTO dto) {
         Periodo periodoEncontrado = periodoRepository.findById(dto.getPeriodoId())
                 .orElseThrow(() -> new RuntimeException("Período não encontrado com o ID: " + dto.getPeriodoId()));
 
         String senhaCriptografada = passwordEncoder.encode(dto.getSenha());
-        Professor novoProfessor = new Professor(dto.getNome(), dto.getCpf(), senhaCriptografada, periodoEncontrado);
+        Professor novoProfessor = new Professor(
+                dto.getNome(),
+                limparCpf(dto.getCpf()),
+                senhaCriptografada,
+                periodoEncontrado);
         professorRepository.save(novoProfessor);
     }
 
@@ -55,7 +64,7 @@ public class ProfessorService {
                 .orElseThrow(() -> new RuntimeException("Período não encontrado com o ID: " + dto.getPeriodoId()));
 
         professorExistente.setNome(dto.getNome());
-        professorExistente.setCpf(dto.getCpf());
+        professorExistente.setCpf(limparCpf(dto.getCpf()));
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
             professorExistente.setSenha(passwordEncoder.encode(dto.getSenha()));
         }
@@ -68,7 +77,7 @@ public class ProfessorService {
     }
 
     public Optional<Professor> acharPorCpf(String cpf) {
-        return professorRepository.findByCpf(cpf);
+        return professorRepository.findByCpf(limparCpf(cpf));
     }
 
     public Optional<Professor> acharPorMatricula(String matricula) {
@@ -118,7 +127,7 @@ public class ProfessorService {
         Optional<Professor> professorOpt = Optional.empty();
 
         if (dto.getCpf() != null && !dto.getCpf().isBlank()) {
-            professorOpt = professorRepository.findByCpf(dto.getCpf());
+            professorOpt = professorRepository.findByCpf(limparCpf(dto.getCpf()));
         }
 
         if (professorOpt.isEmpty() && dto.getMatricula() != null && !dto.getMatricula().isBlank()) {
