@@ -1,6 +1,7 @@
 package br.com.api.clearSpaces.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "funcionario")
@@ -16,6 +17,7 @@ public class Funcionario {
     private String matricula;
     @Column(unique = true, nullable = false)
     private String cpf;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String senha;
 
